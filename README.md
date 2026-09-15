@@ -382,9 +382,6 @@ ubicaciones predeterminadas.
 | `MAX_EVENTS_PER_UPLOAD`         | Eventos máximos por archivo         | `20000`                                                           |
 | `VITE_API_BASE_URL`             | URL base del frontend               | `http://localhost:8000/api/v1`                                    |
 
-`.env` es configuración local y puede contener secretos; no debe publicarse.
-`.env.example` no contiene credenciales reales.
-
 ## 📥 Instalación
 
 ### Backend
