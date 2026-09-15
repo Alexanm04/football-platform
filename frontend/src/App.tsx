@@ -82,7 +82,6 @@ export default function App() {
               </div>
               <span className="font-display font-semibold text-[15px] tracking-tight text-slate-100 hidden sm:block">
                 Football Analytics{" "}
-                <span className="text-slate-500 font-medium">Pro</span>
               </span>
             </button>
 
