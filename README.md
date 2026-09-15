@@ -23,7 +23,7 @@ partidos y eventos de StatsBomb. También permite crear partidos y almacenar
 eventos JSON validados en PostgreSQL.
 
 Desde la interfaz se pueden seleccionar competiciones y partidos para generar
-redes de pases y datos de mapas de calor.
+redes de pases y mapas de calor.
 
 ### 🔗 Red de pases
 
@@ -73,7 +73,7 @@ recibe:
 - `possession`: posesión, entre 0 y 100;
 - `width`: amplitud del equipo, entre 0 y 68.
 
-Utiliza los modelos serializados de `tactical_models.pkl` para devolver
+Utiliza los modelos XGBoost previamente entrenados y guardados en `tactical_models.pkl` para devolver
 `xg_for` y `xg_against`. También devuelve valores SHAP para explicar el
 impacto de las cuatro variables en cada predicción.
 
@@ -341,7 +341,7 @@ constituyen un modelo completo de seguridad.
 - CUDA cuando está disponible;
 - Node.js/npm para el frontend;
 
-## 📦 Modelos, datasets y artefactos
+## 📦 Modelos utilizados
 
 ### Modelos utilizados en runtime
 
@@ -353,6 +353,18 @@ constituyen un modelo completo de seguridad.
 
 Las rutas de los modelos pueden cambiarse mediante `FOOTBALL_MODEL_PATH`,
 `TACTICAL_MODELS_PATH` y `FOOTBALL_TRACKER_PATH`.
+
+### Procedencia del modelo YOLO
+
+El modelo local `yolo-person-ball-v1.pt` fue fine-tuned a partir del modelo
+documentado `martinjolif/yolo-football-player-detection`. El dataset
+relacionado es `martinjolif/football-player-detection`, con la transformación
+de clases documentada en `NOTICE.md`.
+
+La procedencia del modelo, el dataset, Roboflow y Ultralytics se describe en
+[NOTICE.md](NOTICE.md). Los materiales derivados pueden estar sujetos a
+condiciones adicionales; esta documentación no constituye asesoramiento
+jurídico.
 
 ## ⚙️ Configuración
 
@@ -416,9 +428,6 @@ npm run build
 
 El archivo `frontend/package.json` define además los comandos `dev`, `lint` y
 `preview`.
-
-No se incluye actualmente un `Dockerfile` ni una configuración Docker
-operativa.
 
 ## ▶️ Ejecución
 
@@ -494,18 +503,6 @@ forman parte de la estructura runtime documentada.
 - clasificación de equipos mediante KMeans;
 - heurísticas de porteros y árbitro;
 - migraciones Alembic para las tablas actuales.
-
-## 📚 Modelos
-
-El modelo local `yolo-person-ball-v1.pt` fue fine-tuned a partir del modelo
-documentado `martinjolif/yolo-football-player-detection`. El dataset
-relacionado es `martinjolif/football-player-detection`, con la transformación
-de clases documentada en `NOTICE.md`.
-
-La procedencia del modelo, el dataset, Roboflow y Ultralytics se describe en
-[NOTICE.md](NOTICE.md). Los materiales derivados pueden estar sujetos a
-condiciones adicionales; esta documentación no constituye asesoramiento
-jurídico.
 
 ## 📄 Licencia
 
