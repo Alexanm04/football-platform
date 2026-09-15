@@ -1,0 +1,51 @@
+# Git and local configuration
+.git/
+.gitignore
+.env
+.env.*
+!.env.example
+
+# Local environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Frontend dependencies and generated build output
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Generated runtime data and experiment output
+runs/
+temp_uploads/
+temp_outputs/
+resultado.mp4
+
+# Datasets, videos and notebooks
+football-dataset/
+football-dataset-merged/
+statsbomb_tactical_dataset.csv
+*.mp4
+*.avi
+*.mov
+*.mkv
+*:Zone.Identifier
+**/*.ipynb
+
+# Training and experiment artifacts
+yolo-football-player-detection.pt
+yolov8m.pt
+yolov8n.pt
+yolo26n.pt
+football-players-detection.pt
+chekpoint_best_regular.pt
+chekpoint_best_regular.pth
+requirements_prtreid.txt
+
+# Documentation and local-only development scripts
+docs/
+notebooks/

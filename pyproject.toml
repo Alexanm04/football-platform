@@ -1,0 +1,39 @@
+[project]
+dependencies = [
+    "alembic",
+    "asyncpg",
+    "fastapi",
+    "numpy",
+    "opencv-python",
+    "pandas",
+    "pydantic",
+    "pydantic-settings",
+    "python-multipart",
+    "pyyaml",
+    "requests",
+    "scikit-learn",
+    "shap",
+    "slowapi>=0.1.10",
+    "sqlalchemy",
+    "statsbombpy",
+    "torch",
+    "ultralytics",
+    "uvicorn",
+    "xgboost",
+]
+
+[project.optional-dependencies]
+dev = [
+    "httpx",
+    "pytest",
+    "pytest-asyncio",
+    "ruff",
+]
+
+training = [
+    "huggingface-hub",
+    "tqdm",
+]
+
+[tool.ruff]
+ignore = ["B008"]

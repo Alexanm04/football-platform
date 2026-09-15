@@ -1,0 +1,61 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Python environments, caches and tooling
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Frontend dependencies and build output
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# IDE and operating-system files
+.idea/
+.vscode/
+.DS_Store
+*.swp
+
+# Runtime temporary files
+temp_uploads/
+temp_outputs/
+
+# Generated results and experiment outputs
+runs/
+resultado.mp4
+
+# Source videos and generated video files
+*.mp4
+*.avi
+*.mov
+*.mkv
+*:Zone.Identifier
+
+# Datasets
+football-dataset/
+football-dataset-merged/
+statsbomb_tactical_dataset.csv
+
+# Experimental models and checkpoints (runtime models are intentionally not ignored)
+yolo-football-player-detection.pt
+yolov8m.pt
+yolov8n.pt
+yolo26n.pt
+football-players-detection.pt
+chekpoint_best_regular.pt
+chekpoint_best_regular.pth
+
+requirements_prtreid.txt
+test_statsbomb.json
+/package-lock.json
