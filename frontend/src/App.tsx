@@ -81,7 +81,7 @@ export default function App() {
                 </svg>
               </div>
               <span className="font-display font-semibold text-[15px] tracking-tight text-slate-100 hidden sm:block">
-                Football Analytics{" "}
+                Football Platform{" "}
               </span>
             </button>
 

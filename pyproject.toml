@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "football-platform"
 version = "0.1.0"
-description = "Football analytics platform"
+description = "Football platform"
 requires-python = ">=3.12"
 
 dependencies = [
@@ -29,6 +29,7 @@ dependencies = [
     "ultralytics",
     "uvicorn",
     "xgboost",
+    "lap>=0.5.12",
 ]
 
 [project.optional-dependencies]

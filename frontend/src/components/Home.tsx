@@ -243,7 +243,7 @@ export default function Home({ onNavigate }: HomeProps) {
           </svg>
 
           <h1 className="font-display text-4xl sm:text-5xl font-semibold tracking-tight text-slate-50 mb-5 leading-[1.08] max-w-2xl">
-            Football analytics, from raw event data to tactical decisions.
+            Football platform, from raw event data to tactical decisions.
           </h1>
           <p className="text-base text-slate-400 leading-relaxed max-w-lg mb-8">
             Four tools built on one match dataset: a trained model for outcome

@@ -120,18 +120,20 @@ individuales.
 ## 🔄 ¿Cómo funciona?
 
 ```text
-React / Vite
-     |
-     v
-FastAPI / Uvicorn
-     |
-     +--> StatsBomb --> Analytics --> redes de pases / heatmaps
-     |
-     +--> PostgreSQL --> players / matches / events
-     |
-     +--> tactical_models.pkl --> XGBoost + SHAP
-     |
-     +--> YOLO --> BoT-SORT --> TeamClassifier/KMeans --> vídeo renderizado
+Navegador
+    |
+    v
+Nginx / React
+    |
+    +--> /api/v1 --> FastAPI / Uvicorn
+                         |
+                         +--> StatsBomb
+                         |
+                         +--> PostgreSQL
+                         |
+                         +--> XGBoost + SHAP
+                         |
+                         +--> YOLO + BoT-SORT + OpenCV + FFmpeg
 ```
 
 El frontend utiliza `VITE_API_BASE_URL` para comunicarse con el backend. Los
@@ -284,7 +286,7 @@ El código actual incluye:
 - límite de resolución de 3840×2160;
 - límite de 5 MB y 20.000 eventos por upload JSON;
 - semáforo para limitar vídeos concurrentes;
-- timeout configurable de procesamiento de vídeo, 180 segundos por defecto;
+- timeout configurable de procesamiento de vídeo;
 - `hide_parameters=True` en el engine SQLAlchemy;
 - exclusión de `.env`, caches, vídeos, datasets y resultados generados en
   `.gitignore` y `.dockerignore`.
@@ -389,10 +391,252 @@ ubicaciones predeterminadas.
 | `MAX_VIDEO_UPLOAD_MB`           | Tamaño máximo de vídeo              | `25`                                                              |
 | `MAX_VIDEO_DURATION_SECONDS`    | Duración máxima                     | `45`                                                              |
 | `MAX_CONCURRENT_VIDEOS`         | Vídeos simultáneos                  | `1`                                                               |
-| `VIDEO_PROCESS_TIMEOUT_SECONDS` | Espera máxima del endpoint de vídeo | `180`                                                             |
+| `VIDEO_PROCESS_TIMEOUT_SECONDS` | Espera máxima del endpoint de vídeo | `240`                                                             |
 | `MAX_EVENT_UPLOAD_BYTES`        | Tamaño máximo JSON                  | `5242880`                                                         |
 | `MAX_EVENTS_PER_UPLOAD`         | Eventos máximos por archivo         | `20000`                                                           |
 | `VITE_API_BASE_URL`             | URL base del frontend               | `http://localhost:8000/api/v1`                                    |
+
+## 🐳 Ejecución con Docker
+
+El proyecto puede ejecutarse mediante Docker Compose utilizando tres servicios:
+
+- `frontend`: aplicación React/Vite compilada y servida mediante Nginx;
+- `backend`: API FastAPI ejecutada con Python 3.12, Uvicorn y las dependencias de Machine Learning y Computer Vision;
+- `db`: base de datos PostgreSQL con almacenamiento persistente mediante un volumen Docker.
+
+La arquitectura de ejecución es:
+
+```text
+Navegador
+    |
+    v
+Nginx / React
+    |
+    +--> /api/v1 --> FastAPI / Uvicorn
+                         |
+                         +--> PostgreSQL
+                         |
+                         +--> StatsBomb
+                         |
+                         +--> XGBoost + SHAP
+                         |
+                         +--> YOLO + BoT-SORT + OpenCV + FFmpeg
+```
+
+### Requisitos
+
+Para ejecutar el proyecto con Docker se necesita:
+
+- Docker Engine;
+- Docker Compose.
+
+La configuración Docker actual está orientada a CPU. PyTorch utiliza CUDA cuando detecta una GPU compatible, pero la aplicación también puede ejecutarse en CPU.
+
+### Configuración
+
+Copia el archivo de variables de entorno de ejemplo:
+
+```bash
+cp .env.example .env
+```
+
+Configura las variables necesarias para PostgreSQL en `.env`:
+
+```env
+POSTGRES_USER=football_user
+POSTGRES_PASSWORD=<tu_contraseña>
+POSTGRES_DB=football_db
+```
+
+El archivo `.env` es exclusivamente local y no debe subirse al repositorio.
+
+Las rutas de los modelos también pueden configurarse mediante variables de entorno. En Docker se utilizan las siguientes rutas internas:
+
+```env
+FOOTBALL_MODEL_PATH=/app/yolo-person-ball-v1.pt
+FOOTBALL_TRACKER_PATH=/app/src/modules/computer_vision/application/botsort_football.yaml
+TACTICAL_MODELS_PATH=/app/tactical_models.pkl
+```
+
+El frontend se compila utilizando `/api/v1` como base de la API. Nginx redirige internamente las peticiones hacia el servicio backend.
+
+### Construcción de las imágenes
+
+Desde la raíz del repositorio:
+
+```bash
+docker compose build
+```
+
+La imagen del backend incluye:
+
+- Python 3.12;
+- FFmpeg;
+- OpenCV y sus dependencias del sistema;
+- PyTorch;
+- Ultralytics;
+- scikit-learn;
+- XGBoost;
+- SHAP;
+- `lap` para el tracking utilizado por BoT-SORT;
+- el resto de dependencias definidas en `pyproject.toml`.
+
+La imagen del frontend utiliza una construcción multietapa: Node.js se utiliza durante el build y Nginx sirve posteriormente los archivos estáticos generados.
+
+### Arranque
+
+Para iniciar los servicios en segundo plano:
+
+```bash
+docker compose up -d
+```
+
+Comprobar el estado:
+
+```bash
+docker compose ps
+```
+
+Los servicios principales son:
+
+```text
+frontend
+backend
+db
+```
+
+PostgreSQL incluye un healthcheck y el backend espera a que la base de datos esté disponible antes de iniciarse.
+
+### Migraciones
+
+Las migraciones de Alembic se ejecutan dentro del contenedor backend:
+
+```bash
+docker compose exec backend alembic upgrade head
+```
+
+Para consultar la revisión actual:
+
+```bash
+docker compose exec backend alembic current
+```
+
+### Acceso a la aplicación
+
+Una vez iniciados los servicios:
+
+```text
+Frontend:
+http://localhost
+
+Backend:
+http://localhost:8000
+
+Swagger:
+http://localhost:8000/docs
+```
+
+El endpoint de comprobación básica del backend es:
+
+```text
+GET /health
+```
+
+### Comunicación entre servicios
+
+Dentro de la red Docker, el backend se conecta a PostgreSQL mediante el nombre del servicio `db`:
+
+```text
+postgresql+asyncpg://<usuario>:<contraseña>@db:5432/<base_de_datos>
+```
+
+El navegador no utiliza el nombre interno `backend`. Las peticiones del frontend a `/api/v1` pasan por Nginx y son redirigidas internamente al servicio FastAPI.
+
+### Computer Vision en Docker
+
+El contenedor backend incluye las dependencias necesarias para ejecutar el pipeline de Computer Vision:
+
+- PyTorch;
+- Ultralytics;
+- OpenCV;
+- BoT-SORT;
+- KMeans;
+- FFmpeg.
+
+Los artefactos necesarios para el runtime son:
+
+```text
+yolo-person-ball-v1.pt
+tactical_models.pkl
+src/modules/computer_vision/application/botsort_football.yaml
+```
+
+El proceso utiliza CPU cuando CUDA no está disponible.
+
+Los directorios temporales utilizados por el pipeline se encuentran dentro del contenedor:
+
+```text
+/tmp/football_platform/uploads
+/tmp/football_platform/outputs
+```
+
+El endpoint de vídeo mantiene las restricciones de tamaño, duración, resolución, concurrencia y timeout definidas por la configuración de la aplicación.
+
+El timeout de procesamiento puede configurarse mediante:
+
+```env
+VIDEO_PROCESS_TIMEOUT_SECONDS=240
+```
+
+El procesamiento de vídeo puede tardar varios minutos en CPU dependiendo de la duración y complejidad del vídeo.
+
+### Detener los servicios
+
+Para detener los contenedores:
+
+```bash
+docker compose down
+```
+
+El volumen de PostgreSQL no se elimina al ejecutar este comando, por lo que los datos persistentes se conservan.
+
+Para eliminar también el volumen de PostgreSQL:
+
+```bash
+docker compose down -v
+```
+
+Esta última operación elimina los datos persistidos de la base de datos.
+
+### Logs
+
+Para consultar los logs del backend:
+
+```bash
+docker compose logs -f backend
+```
+
+Para consultar los logs de todos los servicios:
+
+```bash
+docker compose logs -f
+```
+
+### Estructura Docker
+
+Los archivos principales relacionados con la contenerización son:
+
+```text
+Dockerfile
+docker-compose.yml
+frontend/
+  Dockerfile
+  nginx.conf
+```
+
+El backend utiliza una imagen independiente, el frontend se compila mediante una imagen multietapa y PostgreSQL se ejecuta en un servicio separado.
+
+Los archivos `.env`, datasets, vídeos, resultados temporales, `node_modules`, entornos virtuales y artefactos experimentales se excluyen mediante `.dockerignore`.
 
 ## 📥 Instalación
 

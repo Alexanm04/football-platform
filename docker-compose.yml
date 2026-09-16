@@ -1,0 +1,65 @@
+services:
+  db:
+    image: postgres:17-alpine
+
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-football_db}
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB:-football_db}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-football_db}
+
+      FOOTBALL_MODEL_PATH: /app/yolo-person-ball-v1.pt
+      FOOTBALL_TRACKER_PATH: /app/src/modules/computer_vision/application/botsort_football.yaml
+      TACTICAL_MODELS_PATH: /app/tactical_models.pkl
+
+      VIDEO_PROCESS_TIMEOUT_SECONDS: ${VIDEO_PROCESS_TIMEOUT_SECONDS:-240}
+
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+
+      MAX_VIDEO_UPLOAD_MB: ${MAX_VIDEO_UPLOAD_MB:-25}
+      MAX_VIDEO_DURATION_SECONDS: ${MAX_VIDEO_DURATION_SECONDS:-45}
+      MAX_CONCURRENT_VIDEOS: ${MAX_CONCURRENT_VIDEOS:-1}
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: /api/v1
+
+    depends_on:
+      backend:
+        condition: service_healthy
+
+    ports:
+      - "80:80"
+
+volumes:
+  postgres_data:
