@@ -340,6 +340,9 @@ constituyen un modelo completo de seguridad.
 ### Sistema e infraestructura
 
 - FFmpeg;
+- Docker;
+- Docker Compose;
+- Nginx;
 - CUDA cuando está disponible;
 - Node.js/npm para el frontend;
 
